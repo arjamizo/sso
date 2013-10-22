@@ -1,0 +1,25 @@
+{
+	"folders":
+	[
+	{
+		"follow_symlinks": true,
+		"path": "/home/azochniak/sso"
+	}
+	]
+	,"settings":
+	{
+		"tab_size": 8
+		,"translate_tabs_to_spaces": true
+		,"use_tab_stops": false
+	}
+	,"build_systems": //http://sublimetext.info/docs/en/reference/build_systems.html
+	//http://www.sublimetext.com/docs/3/projects.html
+	[
+		{
+			"name": "RunAsC"
+			,"selector": ["source.c","source.cpp"]
+			// ,"extensions": ["c"]
+			,"shell_cmd": "make"
+		}
+	]
+}
