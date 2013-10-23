@@ -48,7 +48,7 @@ int KillRead=0, EagerClose=0;
 
 int child(int input) {
 	char buf[200];
-//char buf;
+	//char buf;
 	int totread=0;
 	printf("inChild\n");
 	if (KillRead) exit(1);
@@ -62,11 +62,11 @@ int child(int input) {
 			totread+=readed;
 			readed=1;
 			buf[readed]='\0';
-#ifdef MillionTest
+	#ifdef MillionTest
 			printf("readed %d, so far %d\n", readed, totread);
-#else
+	#else
 			printf("%s", buf);
-#endif
+	#endif
 		}
 		wl(readed,__LINE__);
 		if(!readed) printf("nothing readed in this turn\n");
@@ -77,11 +77,11 @@ int child(int input) {
 }
 
 int parent(int output) {
-//  const char *t="czesc Uzytkowniku\n";
+	//  const char *t="czesc Uzytkowniku\n";
 	char buf='T';
 	printf("ELO\n");
-//write(output, t, strlen(t));
-#ifdef MillionTest
+	//write(output, t, strlen(t));
+	#ifdef MillionTest
 	printf("Warning! In million test mode!\n");
 	sleep(2);
 
@@ -93,15 +93,15 @@ int parent(int output) {
 		}
 		wl(write(output, &buf, 1),__LINE__);
 	}
-#else
+	#else
 	printf("reading from input\n");
 	while((buf=getchar())!=EOF) {
 		w(write(output, (const void*)&buf, 1));
 		printf("Writing %c\n",buf);
 	}
-#endif
-close(output);
-return 0;
+	#endif
+	close(output);
+	return 0;
 }
 
 int main(int argc, char *argv[]) {
@@ -112,8 +112,9 @@ int main(int argc, char *argv[]) {
 	if (argc==1) {
 		//DelayRead=SIMPLEFORKING=1;
 		printf("WARNING! Overriding run parameters\n");
-		argc=3;
-		char *myargv[3]={"pipes1","-pls","-pwc"};
+		#define LEN 5
+		argc=LEN;
+		char *myargv[LEN]={"pipes1","-pls","-p'tee /tmp/txt.txt'","-p'tee /tmp/txt2.txt'","-pwc"};
 		argv=(char**)myargv;
 	}
 	while ((opt = getopt(argc, argv, "p:sre"))!=-1) {
@@ -138,9 +139,9 @@ int main(int argc, char *argv[]) {
 			strcpy(progstr[cnt],optarg);
 			printf("added new program to run-list: %s\n", progstr[cnt]);
 			cnt++;
-#ifdef DEBUG
+			#ifdef DEBUG
 			printf("new d=%s\n",optarg);
-#endif
+			#endif
 			break;
 			default:
 			printf("error\n");
@@ -155,9 +156,9 @@ if(SIMPLEFORKING) {
 	switch(r) {
 		case 0:
 		printf("STARTED CHILD\n");
-#ifndef DontCloseOutputOnChild
+		#ifndef DontCloseOutputOnChild
 		close(pipefd[1]);
-#endif
+		#endif
 		child(pipefd[0]);
 		exit(0);
 		break;
@@ -167,9 +168,9 @@ if(SIMPLEFORKING) {
 		break;
 		default:
 		printf("created child with PID=%d\n", r);
-#ifndef DontCloseInputInParent
+		#ifndef DontCloseInputInParent
 		close(pipefd[0]);
-#endif
+		#endif
 		printf("elo\n");
 		parent(pipefd[1]);
 	}
@@ -179,13 +180,15 @@ if(SIMPLEFORKING) {
 } else {
 	printf("passing parameters\n");
 
-if(cnt>10) exit(10); {//too many arguments
+	if(cnt>10) {exit(10); }//too many arguments
 	int pipes[10][2];
-}
-for(int i=1; i<cnt; ++i)
-{
-	printf("Running %10s and connecting to %10s's outputs\n", progstr[i-1], progstr[i]);
-}
+
+	printf("Running %s\n", progstr[0]);
+	for(int i=1; i<cnt-1; ++i)
+	{
+		printf("Connecting %10s's output to newly started %10s's outputs\n", progstr[i-1], progstr[i]);
+	}
+	printf("Running last program %s\n", progstr[cnt-1]);
 }
 
 return 0;
