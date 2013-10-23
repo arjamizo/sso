@@ -104,6 +104,30 @@ int parent(int output) {
 	return 0;
 }
 
+//Convention: child always reads
+// int hookProcess(const char *commandLine, int parentsOutput, int childsOutput) {
+
+// 	int r=fork();
+// 	switch(r) {
+// 		case 0: 
+// 		//wejsciem dziecka jest wyjscie rodzica, 
+// 		//zatem nie potrzebujemy wejscia rodzica
+// 		printf("Child of %d\n", getppid());
+// 		close(stdin);
+// 		close(stdout);
+// 		close(parentsOutput);
+// 		dup(childsOutput); //na
+// 		exit(1);
+// 		break;
+// 		case -1: 
+// 		printf("Error\n");
+// 		break;
+// 		default: 
+// 		printf("Process %d\n", r);
+// 		close(childsOutput);
+// 	}
+// }
+
 int main(int argc, char *argv[]) {
 	int SIMPLEFORKING=0;
 	int opt;
@@ -112,9 +136,11 @@ int main(int argc, char *argv[]) {
 	if (argc==1) {
 		//DelayRead=SIMPLEFORKING=1;
 		printf("WARNING! Overriding run parameters\n");
-		#define LEN 5
+		#define LEN 2
 		argc=LEN;
-		char *myargv[LEN]={"pipes1","-pls","-p'tee /tmp/txt.txt'","-p'tee /tmp/txt2.txt'","-pwc"};
+		char *myargv[LEN]={"pipes1","-pls"
+		//,"-p'tee /tmp/txt.txt'","-p'tee /tmp/txt2.txt'","-pwc"
+		};
 		argv=(char**)myargv;
 	}
 	while ((opt = getopt(argc, argv, "p:sre"))!=-1) {
@@ -181,14 +207,95 @@ if(SIMPLEFORKING) {
 	printf("passing parameters\n");
 
 	if(cnt>10) {exit(10); }//too many arguments
-	int pipes[10][2];
+	int pipes[10][2]; 
+	int ppe[2];
+	// printf("Running %s\n", progstr[0]);
+	//hookProcess definition and //pipes[...][1] is write-only! 
+	//extern int hookProcess(const char *commandLine, int stdin, int stdout);
 
-	printf("Running %s\n", progstr[0]);
-	for(int i=1; i<cnt-1; ++i)
+	//int hookProcess(const char *commandLine, int closeInParent, int closeInChild, int toClose1, int toClose2) {
+	//wl(pipe(pipes[0]),__LINE__);
+	// int cachedInput=dup(stdin),cachedOutput=dup(stdout);
+
+	// wl(pipe(pipes[1]),__LINE__);
+
+	// int r=fork();
+	// if(r==0) {
+	// 	close(pipes[1][0]);
+	// 	dup2(pipes[1][1],STDOUT_FILENO);
+	// 	close(pipes[1][1]);
+	// 	printf("Nie powinno sie wydarzyc\n");
+	// 	execlp("ls","ls","-l",NULL);
+	// 	exit(0);
+	// } else if (r!=-1) {
+	// 	close(pipes[1][1]);
+	// 	dup2(pipes[1][0],STDIN_FILENO);
+	// 	close(pipes[1][0]);
+	// 	char buf;
+	// 	while(read(STDIN_FILENO,&buf,1)>0) {
+	// 		write(STDOUT_FILENO,&buf,1);
+	// 	}
+	// 	//close(pipes[1][1]);//nie bedziemy czytac z wejscia do child-a
+	// 	// close(STDOUT_FILENO);
+	// 	// dup2(pipes[1][0],STDOUT_FILENO);//ale do wejscia child-a bedziemy pisac
+	// 	// close(pipes[1][0]);//nie bedziemy pisac do wyjscia z child-a
+	// 	// dup2(pipes[0][1],STDIN_FILENO);//ale bedziemy czytac z wyjsica childa
+	// }
+	// int status;
+	// wait(&status);
+
+	//hookProcess(progstr[0],pipes[0][0],pipes[0][1]);//child will not write
+	printf("here\n");
+	int rdonly=STDIN_FILENO,wronly=STDOUT_FILENO;
+	for(int i=0; i<cnt; ++i)
 	{
+		wl(pipe(pipes[i]),__LINE__);
+		//pipes[...][1] is write-only! 
+		int prWRO=wronly,prRDO=rdonly;
+		rdonly=pipes[i][0];
+		wronly=pipes[i][1]; //write only
+		int r=fork();
+		if(r==0) {
+			//child
+			// dup2(begin, STDIN_FILENO);
+			// close(prBegin);
+			// close(prEnd);
+			close(rdonly);
+			dup2(wronly, STDOUT_FILENO);
+			close(wronly);
+			execlp("ls","ls","-l",NULL);
+			exit(-1);
+		} else if (r!=-1) {
+			close(wronly);
+			dup2(rdonly,STDIN_FILENO);
+			close(rdonly);
+			// wait(0);
+			execlp("wc","wc",NULL);
+			exit(-2);
+		}
+		// hookProcess(progstr[i],pipes[i-1][1],pipes[i][0]);
 		printf("Connecting %10s's output to newly started %10s's outputs\n", progstr[i-1], progstr[i]);
 	}
+
 	printf("Running last program %s\n", progstr[cnt-1]);
+	
+
+	//close(stdout); dup(pipes[0][1]);
+	// wl(pipe(pipes[cnt-1]),__LINE__);
+	//hookProcess(progstr[cnt-1],pipes[cnt-1-1][1],-1);//Last process will not have changed stdout descriptor
+	//this process must be last executed command
+	//with set input descriptor to last pipe's out (read-only) pipes[cnt-2][1]
+	// close(stdin); dup(pipes[cnt-2][1]);
+	for(int i=0; i<cnt-1; ++i) {
+		int status;
+		//wait(&status);
+		printf("process finished %d\n", WEXITSTATUS(status));
+	}
+	for (int i = 0; i < cnt; ++i)
+	{
+		// close(pipes[i][0]);
+		// close(pipes[i][1]);
+	}
 }
 
 return 0;
