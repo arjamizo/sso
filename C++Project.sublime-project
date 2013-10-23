@@ -19,7 +19,7 @@
 			"name": "RunAsC"
 			,"selector": ["source.c","source.cpp"]
 			// ,"extensions": ["c"]
-			,"shell_cmd": "make"
+			,"shell_cmd": "make; ./main -pls -pcat -pcat -pwc"
 		}
 	]
 }

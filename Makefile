@@ -2,7 +2,7 @@
 FLAGS = -Wall -DDEBUG -std=c99
 all: clean pipes1.c
 	gcc pipes1.c -o main $(FLAGS)
-	xterm -hold -e ./main 
+	# xterm -hold -e ./main 
 milliontest: pipes1.c
 	gcc pipes1.c -o main $(FLAGS) -DMillionTest
 	./main -s -r #simple forking, for testing, do not read data
