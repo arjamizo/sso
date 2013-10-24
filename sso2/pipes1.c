@@ -47,12 +47,12 @@ int KillRead=0, EagerClose=0;
 */
 
 int child(int input) {
-	char buf[200];
+	char buf[1];
 	//char buf;
 	int totread=0;
 	printf("inChild\n");
 	if (KillRead) exit(1);
-	int rlimit=2;
+	int rlimit=6;
 	if (DelayRead) for(int i=0; i<rlimit; ++i) {printf("delaying read %d/%d\n", i, rlimit); sleep(1);}
 	if (EagerClose) {close(input); printf("Warning! Not reading, even more, closed at the beginnig\n"); while(1);}
 	sleep(1);
@@ -86,7 +86,7 @@ int parent(int output) {
 	sleep(2);
 
 	for(int i=0; i<(int)10e5 /*or 100000*/; ++i) {
-		// if(i%20000==0 || i>65534) 
+		if(i%20000==0 || i>65534) 
 		{
 			printf("wrote %d\n", i);
 			sleep(1);
@@ -104,7 +104,6 @@ int parent(int output) {
 	return 0;
 }
 
-int DEBUGMODE=0;
 int main(int argc, char *argv[]) {
 	int SIMPLEFORKING=0;
 	int opt;
@@ -129,27 +128,21 @@ int main(int argc, char *argv[]) {
 			SIMPLEFORKING=1;
 			break;
 			case 'd':
-			DEBUGMODE=1;
 			break;
 			case 'r':
-			if (DEBUGMODE) printf("WARNING! Delaying Reading\n");
 			sleep(1);
 			DelayRead=1;
 			break;
 			case 'e':
-			if (DEBUGMODE) printf("EagerClose mode on\n");
 			EagerClose=1;
 			break;
 			case 'k':
-			if (DEBUGMODE) printf("warning! Killing reading process.");
 			KillRead=1;
 			break;
 			case 'p':
 			strcpy(progstr[cnt],optarg);
-			if (DEBUGMODE) printf("added new program to run-list: %s\n", progstr[cnt]);
 			cnt++;
 			#ifdef DEBUG
-			if (DEBUGMODE) printf("new d=%s\n",optarg);
 			#endif
 			break;
 			default:
@@ -191,12 +184,10 @@ if(SIMPLEFORKING) {
 
 	if(cnt>10) {exit(10); }//too many arguments
 	int pipes[10][2]; 
-	if (DEBUGMODE) printf("Running with %d parameters.\n", argc-1);
 	int rdonly=STDIN_FILENO,wronly=STDOUT_FILENO;
 	// int prWRO=wronly,prRDO=rdonly;
 	for(int i=0; i<cnt; ++i)
 	{
-		if(DEBUGMODE) fprintf(stderr, "In loop: running %s\n", progstr[i]);
 		//pipes[...][1] is write-only! 
 		int r;
 		if(i!=cnt-1) { 
@@ -208,7 +199,6 @@ if(SIMPLEFORKING) {
 		} else 
 			r=1;
 		if(r==0) {
-			if(DEBUGMODE) fprintf(stderr, "In child: running %s\n", progstr[i]);
 			//ZAKLADAMY, ze pierwsze uruchomienie ma w kontekscie STDIN
 			close(rdonly);
 			dup2(wronly, STDOUT_FILENO);
@@ -216,16 +206,13 @@ if(SIMPLEFORKING) {
 			execlp(progstr[i],progstr[i],NULL);
 			exit(-1);
 		} else if (r!=-1) {
-			if(DEBUGMODE) fprintf(stderr, "In parent: running %s, i=%d/%d\n", progstr[i], i, cnt-1);
 			if(i!=cnt-1) {
 				close(wronly);
 				dup2(rdonly,STDIN_FILENO); //to wywolanie dup2 operuje na pipie starym
 				close(rdonly);
 			} else {
-				if(DEBUGMODE) fprintf(stderr,"Running last program %s\n", progstr[i]);
 				execlp(progstr[i],progstr[i],NULL);
 			}
-			if(DEBUGMODE) sleep(1);
 		}
 		// hookProcess(progstr[i],pipes[i-1][1],pipes[i][0]);
 		//printf("Connecting %10s's output to newly started %10s's input\n", i==0?"this process":progstr[i-1], progstr[i]);
