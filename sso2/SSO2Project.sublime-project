@@ -1,0 +1,27 @@
+{
+	"build_systems":
+	[
+		{
+			"name": "RunAsC",
+			"selector":
+			[
+				"source.c",
+				"source.cpp"
+			],
+			"shell_cmd": "make; ./main -pls -pcat -pcat -pwc"
+			// "shell_cmd": "xterm -hold -e ls"
+		}
+	],
+	"folders":
+	[
+		{
+			"path": "/export/stud/azochnia/Desktop/SSO_pendrive/sso2"
+		}
+	],
+	"settings":
+	{
+		"tab_size": 4,
+		"translate_tabs_to_spaces": true,
+		"use_tab_stops": false
+	}
+}
