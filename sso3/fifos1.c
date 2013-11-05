@@ -26,10 +26,12 @@ int w(int execcode) {
 /**
 * wrapper for errors with line handling
 */
+#include <assert.h>
 int wl(int execcode, int line) {
 	static char msg[200];
 	if (execcode<0)
 	{
+		assert(1);
 		sprintf(msg, "error somewhere in line %d", line);
 		perror(msg);
 	}
@@ -42,72 +44,51 @@ int wl(int execcode, int line) {
 	- nie ma kogos, kto by pisal
 	- ktos pisze za duzo, albo 
 */
-int main(int argc, char *argv[]) {
+int main(int argc, char const *argv[])
+{
 	int ppe[2];
 	wl(pipe(ppe),__LINE__);
 	int rdonly=ppe[0];
 	int wronly=ppe[1];
 	int r=fork();
-	int waitingForReadAfterReadingMagicalNumber=2;
-	int waitinfForReading=1;
-	if(r==0) {
-		printf("Proces czytajacy: Proces dziecka: czyta\n");
-		int readed=0;
-		char buf[1<<16];
-		close(wronly);
-		int waitinfForReading=1;
-		printf("Proces czytajacy: Czekanie %d sekund%s, aby bylo co czytac\n", waitinfForReading, (waitinfForReading==1)?"y":"");
-		for (int i = 0; i < waitinfForReading; ++i)
-		{
-			sleep(1);
-		}
-		printf("Proces czytajacy: Przeczytano magiczna liczbe %d z bufora o dl %d.\n", (int)read(rdonly,(void*)buf,sizeof buf), sizeof buf);
-		sleep(waitingForReadAfterReadingMagicalNumber);
-		int toRead=1;
-		int slowMotionAfterRead=4096;
-		if(argc==2) {
-			toRead=atoi(argv[1]);
-			printf("Proces czytajacy: parametr dostrajania czytania=%d\n", toRead);
-		}
-		int totread=0;
-		while((readed=read(rdonly, (void*)buf, toRead))>0) {
-			totread+=readed;
-			// buf[readed]='\0';
-			// if(totread>65534 && totread<65534+4096) {
-				// if(totread%slowMotionAfterRead<2 && totread%slowMotionAfterRead>slowMotionAfterRead-2) 
-				printf("Proces czytajacy: read %d, so far %d, a-b=%d\n", readed, totread, totread-readed);
-				// if(totread%slowMotionAfterRead<20 && totread%slowMotionAfterRead>slowMotionAfterRead-20) sleep(1);
-			// }
-		}
-		wl(readed,__LINE__);
-	} else if (r!=-1) {
-		close(rdonly);
-		char buf[2048];
-		// for(int i=0; i<(int)10e5 /*or 100000*/; i+=sizeof buf) {
-		int n=65535;
-		printf("Trwa pisanie %d bajtów\n", n);
-		for (int i = 0; i < n; ++i) {
-			wl(write(wronly, buf, 1),__LINE__);
-			if(i+2==n) printf("Prawdopodobnie teraz nastepuje czekanie na odczyt, bo pipe zostal zapelniony w 100%%=%d bajtow\n", i+1);
-		}
-		printf("Oczekujemy %ds aby odczytano odpowiednia ilosc bajtow\n", waitingForReadAfterReadingMagicalNumber);
-		for (int i = 0; i < waitingForReadAfterReadingMagicalNumber; ++i) {
-			sleep(1);
-			printf(".");
-			fflush(stdout);
-		}
-		printf("\n");
-		for(int i=0; i<80*(int)1e3 /*or 100000*/; i+=sizeof buf) {
-			int bl=1<<10<<2; //==4096
-			// printf("writing i=%d\n", i);
-			wl(write(wronly, buf, sizeof buf),__LINE__);
-			// if((i>65534 && i<65534+6) || (i>65534+bl && i<65534+12+bl)) 
+	switch(r) {
+		case -1: 
+		perror("error!");
+		break;
+		case 0:
+			//child
+			close(wronly); 
+			for (int i = 0; i < 2; ++i)
 			{
-			// if(i>65534 || i<65534+10) {
-				printf("wrote %d; -(1<<16)=%d==%d\n", i, n, i-n);
-				// sleep(1);
+				sleep(1);
+				printf("waiting...");
+				fflush(stdout);
 			}
-		}
-
-	} else exit(-1);
+			printf("\n");
+			{
+				int readed,totread=0;
+				char buf[1<<10];
+				int firstread=4090;
+				while((readed=read(rdonly, (void*)buf, 1+0*sizeof buf))>0) {
+					totread+=readed;
+					fprintf(stderr, "read %d in total\n", totread);
+					if(firstread--<0)getchar();
+				}
+			}
+			fprintf(stderr, "FINISHED\n");
+			sleep(10);
+			close(rdonly);
+		break;
+		default: 
+			close(rdonly);
+			for (int i=0; i<(1<<6)+5; ++i) {
+				char buf[1<<10];
+				wl(write(wronly, buf, sizeof buf),__LINE__);
+				fprintf(stderr, "wrote %d in total\n", (int)sizeof buf * (i+1));
+			}
+			sleep(10);
+			close(wronly);
+			//parent, child ID in int r
+	}
+	return 0;
 }

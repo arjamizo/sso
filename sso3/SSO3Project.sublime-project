@@ -8,13 +8,14 @@
 				"source.c",
 				"source.cpp"
 			],
-			"shell_cmd": "make; ./main -pls -pcat -pcat -pwc"
+			"shell_cmd": "make; xterm -hold -e './main -pls -pcat -pcat -pwc'"
 		}
 	],
 	"folders":
 	[
 		{
-			"path": "/export/stud/azochnia/Desktop/SSO_pendrive/sso3"
+			"follow_symlinks": true,
+			"path": "/home/azochniak/sso/sso3"
 		}
 	],
 	"settings":
