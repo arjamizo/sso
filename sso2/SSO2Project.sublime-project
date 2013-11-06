@@ -17,7 +17,7 @@
 	[
 		{
 			"follow_symlinks": true,
-			"path": "/home/azochniak/sso/sso2"
+			"path": "."
 		}
 	],
 	"settings":

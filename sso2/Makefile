@@ -10,5 +10,5 @@ bin/%: %.c
 	gcc $< -o "$@" $(FLAGS)
 # runtest1:
 # 	./main -phello
-# clean:
-# 	rm ./main || echo already clean
+clean:
+ 	rm -r ./bin || echo already clean
