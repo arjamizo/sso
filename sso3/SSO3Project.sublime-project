@@ -2,20 +2,22 @@
 	"build_systems":
 	[
 		{
-			"name": "RunAsC",
+			"name": "RunSSO3",
 			"selector":
 			[
 				"source.c",
 				"source.cpp"
 			],
-			"shell_cmd": "make; xterm -hold -e './main -pls -pcat -pcat -pwc'"
+			"shell_cmd": "pwd; make bin/$file_base_name ; xterm -hold -e './bin/$file_base_name -pls -pcat -pcat -pwc'"
+			,"file_regex": "^[ ]*(...*?):([0-9]*)"
+			,"working_dir": "${project_path:${folder}}"
 		}
 	],
 	"folders":
 	[
 		{
 			"follow_symlinks": true,
-			"path": "/home/azochniak/sso/sso3"
+			"path": "."
 		}
 	],
 	"settings":
