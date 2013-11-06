@@ -11,6 +11,12 @@
 #include <string.h>
 #include <sys/types.h>
 #include <sys/wait.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+
 
 int DelayRead=0;
 
@@ -37,19 +43,17 @@ int wl(int execcode, int line) {
 	}
 	return execcode;
 }
-
+#define fnme "/tmp/KOLEJKA"
 /***
 * Przypadki testowe: 
 	- nie ma kogos, kto by czytal
 	- nie ma kogos, kto by pisal
-	- ktos pisze za duzo, albo 
+	- ktos pisze za duzo - w tym wypadku po ilu odczytanych bajtach mozna pisac dalen 
 */
 int main(int argc, char const *argv[])
 {
-	int ppe[2];
-	wl(pipe(ppe),__LINE__);
-	int rdonly=ppe[0];
-	int wronly=ppe[1];
+    int f=mkfifo(fnme, 0666);
+    wl(f,__LINE__);
 	int r=fork();
 	switch(r) {
 		case -1: 
@@ -57,7 +61,6 @@ int main(int argc, char const *argv[])
 		break;
 		case 0:
 			//child
-			close(wronly); 
 			for (int i = 0; i < 2; ++i)
 			{
 				sleep(1);
@@ -69,26 +72,33 @@ int main(int argc, char const *argv[])
 				int readed,totread=0;
 				char buf[1<<10];
 				int firstread=4090;
+				int rdonly=open(fnme, O_RDONLY);//RDONLY byc nie moze, czeka az ktos bedzie chcial czytac
+				wl(rdonly,__LINE__);
 				while((readed=read(rdonly, (void*)buf, 1+0*sizeof buf))>0) {
 					totread+=readed;
-					fprintf(stderr, "read %d in total\n", totread);
-					if(firstread--<0)getchar();
+					if(firstread--<0){
+						fprintf(stderr, "read %d in total\n", totread);
+						getchar();
+					}
 				}
+				close(rdonly);
 			}
 			fprintf(stderr, "FINISHED\n");
 			sleep(10);
-			close(rdonly);
 		break;
 		default: 
-			close(rdonly);
+		{
+			int wronly=open(fnme, O_WRONLY);//RDONLY byc nie moze, czeka az ktos bedzie chcial czytac
+			wl(wronly,__LINE__);
 			for (int i=0; i<(1<<6)+5; ++i) {
 				char buf[1<<10];
 				wl(write(wronly, buf, sizeof buf),__LINE__);
 				fprintf(stderr, "wrote %d in total\n", (int)sizeof buf * (i+1));
 			}
-			sleep(10);
 			close(wronly);
+			sleep(10);
 			//parent, child ID in int r
+		}
 	}
 	return 0;
 }
