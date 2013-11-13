@@ -1,9 +1,9 @@
 .DEFAULT_GOAL := all
 FLAGS = -Wall -DDEBUG -std=gnu99
 LIBS = -lrt
+.PHONY := run
 # all: clean pipes1.c
 # 	gcc pipes1.c -o main $(FLAGS)
-# 	# xterm -hold -e ./main 	
 bin/%: %.c
 	@pwd
 	@echo Building target bin/$@, first dependency $<

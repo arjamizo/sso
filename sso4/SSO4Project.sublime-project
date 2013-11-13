@@ -8,7 +8,7 @@
 				"source.c",
 				"source.cpp"
 			],
-			"shell_cmd": "pwd; make './bin/$file_base_name' && xterm -hold -e './bin/$file_base_name'"
+			"shell_cmd": "pwd; make './bin/$file_base_name' && xterm -hold -e 'time ./bin/$file_base_name'"
 			// ,"shell_cmd": "xterm -hold",
 			,"file_regex": "^[ ]*([^/[]..*?):([0-9]*)"
 			,"working_dir": "${project_path:${folder}}"
