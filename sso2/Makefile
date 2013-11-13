@@ -11,4 +11,4 @@ bin/%: %.c
 # runtest1:
 # 	./main -phello
 clean:
- 	rm -r ./bin || echo already clean
+	rm -r ./bin || echo already clean
