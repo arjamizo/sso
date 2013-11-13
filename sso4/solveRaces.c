@@ -84,6 +84,15 @@ void freeSem() {
 
 int main(int argc, char const *argv[])
 {
+    int useSemaphores=argc>1;
+    if(argc==1) {
+        fprintf(stderr, "Run with --semaphores to use kernel semaphores.\n");
+        fprintf(stderr, "Now running WITHOUT semaphores\n");
+        useSemaphores=0;
+    } else {
+        fprintf(stderr, "Now running WITH semaphores\n");
+        useSemaphores=1;
+    }
     atexit(exiting);
     shm_unlink(BUFNAME);
     fd = wl(shm_open(BUFNAME, O_RDWR | O_CREAT, S_IRUSR | S_IWUSR /*0774?*/),__LINE__);
@@ -96,34 +105,34 @@ int main(int argc, char const *argv[])
     rptr = mmap(NULL, sizeof(buf),
            PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
     if (rptr == MAP_FAILED) w(-1);
-    initSem();
+    if(useSemaphores) initSem();
     int r=fork();
     printf("i=%d a=%d b=%d\n", rptr->i, rptr->a, rptr->b);
     size_t try=20000;
     if(r==0) { //child
         fprintf(stderr, "\t\t%s\n", "Child");
         for (int i = 0; i < try; ++i) {
-            takeSem();
+            if(useSemaphores) takeSem();
             rptr->b++;
             rptr->i++;
             usleep(5);
-            releaseSem();
+            if(useSemaphores) releaseSem();
         }
         exit(0);
     } else if (r>0) { //parent
         fprintf(stderr, "\t%s\n", "Parent");
         for (int i = 0; i < try; ++i) {
-            takeSem();
+            if(useSemaphores) takeSem();
             rptr->a++;
             rptr->i++;
             usleep(5);
-            releaseSem();
+            if(useSemaphores) releaseSem();
         }
         int status;
         wait(&status);
     } else 
         wl(r,__LINE__);
-    freeSem();
+    if(useSemaphores) freeSem();
     printf("\ti=%d a=%d b=%d\n", rptr->i, rptr->a, rptr->b);
     assert(rptr->i==try*2);
     return 0;
