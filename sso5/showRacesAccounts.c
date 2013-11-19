@@ -71,15 +71,15 @@ void prooveRaces(int *kontoA, int *kontoB, int seed) {
 	int already=seed;
 
 	BEDZIE 2 TYPOW OPERACJI
-	ZROB 200000 TRANSAKCJI Z KIESZENI DO KONTA_A NA KWOTE 100 ALE_TO_NIE_KONIEC
+	ZROB 200000 TRANSAKCJI Z KIESZENI DO KONTA_A NA KWOTE 100 ALE_TO_NIE_KONIEC 
 	ZROB 200000 TRANSAKCJI Z KONTA_A DO KIESZENI NA KWOTE 100 KONIEC
 	TO_TYLE
 
 	assert(already<sizeof transactions/sizeof *transactions);
-	int repeats=(int)transactions[already][0];
+	int repeats=(long long int)transactions[already][0];
 	int *from=(int*)transactions[already][1];
 	int *to=(int*)transactions[already][2];
-	int amount=(int)transactions[already][3];
+	int amount=(long long int)transactions[already][3]; 
 	for (int i = 0; i < repeats; ++i)
 	{
 		if(from) *from-=amount;
