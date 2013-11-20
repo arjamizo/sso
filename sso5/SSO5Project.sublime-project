@@ -2,14 +2,17 @@
 	"build_systems":
 	[
 		{
-			"name": "RunSSO5",
+			"name": "RunSSO5-with-semaphores",
 			"selector": "source.c"
-			// [
-			// 	"source.c",
-			// 	"source.cpp"
-			// 	,"source.c++"
-			// ],
-			,"shell_cmd": "pwd; xterm -e 'killall xterm'; make './bin/$file_base_name' && xterm -hold -e 'time ./bin/$file_base_name'"
+			,"shell_cmd": "pwd; xterm -e 'killall xterm'; make './bin/$file_base_name' && xterm -hold -e 'time ./bin/$file_base_name --sems'"
+			// ,"shell_cmd": "xterm -hold",
+			,"file_regex": "^[ ]*([^/[]..*?):([0-9]*)"
+			,"working_dir": "${project_path:${folder}}"
+		},
+		{
+			"name": "RunSSO5-without-semaphores",
+			"selector": "source.c"
+			,"shell_cmd": "pwd; xterm -e 'killall xterm'; make './bin/$file_base_name' && xterm -hold -e 'time ./bin/$file_base_name --sems==off'"
 			// ,"shell_cmd": "xterm -hold",
 			,"file_regex": "^[ ]*([^/[]..*?):([0-9]*)"
 			,"working_dir": "${project_path:${folder}}"
